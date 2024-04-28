@@ -1,19 +1,18 @@
-
-
+library(readr)
+banco <- read_csv("banco_final.csv")
+View(banco)
 library(tidyverse)
-#alguma coisa capitulo 1----
+library(ggplot2)
+library(lubridate)
+library(forcats)
+library(dplyr)
 
-a
-
-ggplot(mpg) + geom_bar(aes(x = fl)) +
-  estat_theme()
-
+#Padronização (cores e tema)----
 estat_colors <- c(
   "#A11D21", "#003366", "#CC9900",
   "#663333", "#FF6600", "#CC9966",
   "#999966", "#006606", "#008091", 
   "#041835", "#666666" )
-#tema da estat ----
 
 estat_theme <- function(...) {
   theme <- ggplot2::theme_bw() +
@@ -37,12 +36,53 @@ estat_theme <- function(...) {
 }
 
 
-ggplot(mpg) +
-  aes(x = reorder(trans, cty, FUN = median), y = cty) +
+#1) Número de lançamentos a cada década por formato de lançamento;----
+
+#gráfico de linhas
+teste <- data.frame(banco$date_aired)
+teste$ano <- year(teste$banco.date_aired)
+teste$decada <- (teste$ano %/% 10)* 10
+teste$formato <- (banco$format)
+view(teste)
+contados <- teste %>% 
+  group_by(decada, formato) %>% 
+  summarise(quantidades = n())
+view(contados)
+
+ggplot(contados) +
+  aes(x = decada, y = quantidades, group = formato, colour = formato) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  geom_text(aes(label = round(quantidades, 1)), vjust = -1, size = 3, color = "black") +
+  labs(x = "Décadas", y = "Número de Lançamentos") +
+  estat_theme()
+
+#Coloquei os números pra ver se ajudava a visualizar as informações, mas continuou ruim.
+
+#Tentei mudar o posicionamento das legendas pra ver melhorava a visualização, 
+#mas não consegui mexer na legenda sem mudar o tema da estat
+
+#Em primeiro momento eu não consegui deixar tudo no mesmo banco
+#e por isso criei outros, mas pretendo tentar arrumar em breve.
+
+#Eu tenho que traduzir as informações que estão em inglês?
+
+
+
+
+
+#2) Variação da nota IMDB por temporada dos episódios;----
+
+#só uma ideia inicial
+ggplot(banco) +
+  aes(x = season, y = imdb) +
   geom_boxplot(fill = c("#A11D21"), width = 0.5) +
   stat_summary(
     fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
   ) +
-  labs(x = "Transmissão", y = "Consumo em Cidade (milhas/galão)") +
+  labs(x = "Temporada", y = "Notas") +
   estat_theme()
-ggsave("box_bi.pdf", width = 158, height = 93, units = "mm")
+
+#3) Top 3 terrenos mais frequentes pela ativação da armadilha;----
+
+
