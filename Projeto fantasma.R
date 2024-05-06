@@ -39,6 +39,7 @@ estat_theme <- function(...) {
 #1) Número de lançamentos a cada década por formato de lançamento;----
 
 #gráfico de linhas
+
 teste <- data.frame(banco$date_aired)
 teste$ano <- year(teste$banco.date_aired)
 teste$decada <- (teste$ano %/% 10)* 10
@@ -47,41 +48,39 @@ view(teste)
 contados <- teste %>% 
   group_by(decada, formato) %>% 
   summarise(quantidades = n())
+contados$formato[contados$formato == "Movie"] <-  "Filme"
+contados$formato[contados$formato == "Serie"] <-  "Série"
 view(contados)
 
 ggplot(contados) +
   aes(x = decada, y = quantidades, group = formato, colour = formato) +
   geom_line(size = 1) +
   geom_point(size = 2) +
-  geom_text(aes(label = round(quantidades, 1)), vjust = -1, size = 3, color = "black") +
-  labs(x = "Décadas", y = "Número de Lançamentos") +
+  labs(x = "Década", y = "Número de Lançamentos") +
   estat_theme()
+ggsave("Linhas01.pdf", width = 158, height = 93, units = "mm")
 
-#Coloquei os números pra ver se ajudava a visualizar as informações, mas continuou ruim.
-
-#Tentei mudar o posicionamento das legendas pra ver melhorava a visualização, 
-#mas não consegui mexer na legenda sem mudar o tema da estat
-
-#Em primeiro momento eu não consegui deixar tudo no mesmo banco
-#e por isso criei outros, mas pretendo tentar arrumar em breve.
-
-#Eu tenho que traduzir as informações que estão em inglês?
-
-
-
+#Introdução 
+#Título
+#Década(1960, 1970, 1980, 1990...)
+#Melhorar a Análise Descritiva
+#Função "\ref"
 
 
 #2) Variação da nota IMDB por temporada dos episódios;----
 
-#só uma ideia inicial
-ggplot(banco) +
+temporadas_1234 <- banco %>% 
+  filter(season %in% c("1", "2", "3", "4"))
+
+ggplot(temporadas_1234) +
   aes(x = season, y = imdb) +
   geom_boxplot(fill = c("#A11D21"), width = 0.5) +
-  stat_summary(
-    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
-  ) +
-  labs(x = "Temporada", y = "Notas") +
+  stat_summary(fun = "mean", geom = "point", shape = 23, size = 3, fill = "white") +
+  labs(x = "Temporada", y = "Nota") +
   estat_theme()
+ggsave("BoxPlot01.pdf", width = 158, height = 93, units = "mm")
+
+#não entendi muito bem oque a função "\ref" faz, então deve continuar errada
 
 #3) Top 3 terrenos mais frequentes pela ativação da armadilha;----
 
