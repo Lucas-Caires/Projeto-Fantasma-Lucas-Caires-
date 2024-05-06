@@ -71,6 +71,7 @@ ggsave("Linhas01.pdf", width = 158, height = 93, units = "mm")
 
 temporadas_1234 <- banco %>% 
   filter(season %in% c("1", "2", "3", "4"))
+view(temporadas_1234)
 
 ggplot(temporadas_1234) +
   aes(x = season, y = imdb) +
