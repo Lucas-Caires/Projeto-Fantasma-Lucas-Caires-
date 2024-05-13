@@ -6,6 +6,7 @@ library(ggplot2)
 library(lubridate)
 library(forcats)
 library(dplyr)
+library(scales)
 
 #Padronização (cores e tema)----
 estat_colors <- c(
@@ -35,6 +36,30 @@ estat_theme <- function(...) {
   )
 }
 
+cores_estat <- c("#A11D21", "#003366", "#CC9900", "#663333", "#FF6600", "#CC9966",
+                 "#999966", "#006606", "#008091", "#041835", "#666666")
+
+
+theme_estat <- function(...) {
+  theme <- ggplot2::theme_bw() +
+    ggplot2::theme(
+      axis.title.y = ggplot2::element_text(colour = "black", size = 12),
+      axis.title.x = ggplot2::element_text(colour = "black", size = 12),
+      axis.text = ggplot2::element_text(colour = "black", size = 9.5),
+      panel.border = ggplot2::element_blank(),
+      axis.line = ggplot2::element_line(colour = "black"),
+      legend.position = "top",
+      ...
+    )
+  
+  return(
+    list(
+      theme,
+      scale_fill_manual(values = cores_estat),
+      scale_colour_manual(values = cores_estat)
+    )
+  )
+}
 
 #1) Número de lançamentos a cada década por formato de lançamento;----
 
@@ -77,12 +102,100 @@ ggplot(temporadas_1234) +
   aes(x = season, y = imdb) +
   geom_boxplot(fill = c("#A11D21"), width = 0.5) +
   stat_summary(fun = "mean", geom = "point", shape = 23, size = 3, fill = "white") +
-  labs(x = "Temporada", y = "Nota") +
+  labs(x = "Temporada", y = "Nota IMDB") +
   estat_theme()
 ggsave("BoxPlot01.pdf", width = 158, height = 93, units = "mm")
+
+#Introdução da análise
+#Quadro de medidas (6.2.1) TABELA
+#Títulos Gráfico/Análise
+#Rever análise(Menos Pessoal, Menos 1ºpessoa, )
+#
 
 #não entendi muito bem oque a função "\ref" faz, então deve continuar errada
 
 #3) Top 3 terrenos mais frequentes pela ativação da armadilha;----
+
+#Tradução----
+banco$setting_terrain[banco$setting_terrain == "Air"] <- "Aereo"
+banco$setting_terrain[banco$setting_terrain == "Cave"] <- "Cavernoso"
+banco$setting_terrain[banco$setting_terrain == "Coast"] <- "Costeiro"
+banco$setting_terrain[banco$setting_terrain == "Desert"] <- "Desertico"
+banco$setting_terrain[banco$setting_terrain == "Forest"] <- "Florestal"
+banco$setting_terrain[banco$setting_terrain == "Island"] <- "Insular"
+banco$setting_terrain[banco$setting_terrain == "Jungle"] <- "Selvagem"
+banco$setting_terrain[banco$setting_terrain == "Moon"] <- "Lunar"
+banco$setting_terrain[banco$setting_terrain == "Mountain"] <- "Montanhoso"
+banco$setting_terrain[banco$setting_terrain == "Ocean"] <- "Oceanico"
+banco$setting_terrain[banco$setting_terrain == "Rural"] <- "Rural"
+banco$setting_terrain[banco$setting_terrain == "Snow"] <- "Neve"
+banco$setting_terrain[banco$setting_terrain == "Space"] <- "Espacial"
+banco$setting_terrain[banco$setting_terrain == "Swamp"] <- "Pantanoso"
+banco$setting_terrain[banco$setting_terrain == "Urban"] <- "Urbano"
+
+#Gráfico do Terreno com maior Frequência----
+
+classes <- banco %>%
+  filter(!is.na(setting_terrain)) %>%
+  count(setting_terrain) %>%
+  mutate(
+    freq = n %>% percent()
+  ) %>%
+  mutate(
+    freq = gsub("\\.", ",", freq) %>%
+      paste(sep = ""),
+    label = str_c(n, " (", freq, ")") %>%
+      str_squish()
+)
+
+  ggplot(classes) +
+  aes(x = fct_reorder(setting_terrain, n, .desc=T), y = n, label = label) +
+  geom_bar(stat = "identity", fill = "#A11D21", width = 0.7) +
+  geom_text(
+    position = position_dodge(width = .9),
+    vjust = -0.5, #hjust = .5,
+    size = 3
+  ) + 
+  labs(x = "Terreno", y = "Frequência") +
+  theme_estat()
+ggsave("colunas01.pdf", width = 158, height = 93, units = "mm")
+
+#Gráfico de Ativação das Armadilhas
+ativacao <- banco %>%
+  group_by(setting_terrain, trap_work_first) %>%
+  summarise(freq = n()) %>%
+  mutate(
+    freq_relativa = freq %>% percent()
+  )
+
+ativacao_urbano <- ativacao[ativacao$setting_terrain == "Urbano", ]
+ativacao_rural <- ativacao[ativacao$setting_terrain == "Rural", ]
+ativacao_florestal <- ativacao[ativacao$setting_terrain == "Florestal", ]
+
+ativacao_top3 <- rbind(ativacao_urbano, ativacao_rural, ativacao_florestal)
+ativacao_top3 <- ativacao_top3[complete.cases(ativacao_top3$trap_work_first),]
+ativacao_top3$trap_work_first[ativacao_top3$trap_work_first == "TRUE"] <- "Verdadeiro"
+ativacao_top3$trap_work_first[ativacao_top3$trap_work_first == "FALSE"] <- "Falso"
+
+porcentagens <- str_c(ativacao_top3$freq_relativa, "%") %>% str_replace("\\.", ",")
+
+legendas <- str_squish(str_c(ativacao_top3$freq, " (", porcentagens, ")"))
+
+ggplot(ativacao_top3) +
+  aes(
+    x = fct_reorder(setting_terrain, freq, .desc = T), y = freq,
+    fill = trap_work_first, label = legendas
+  ) +
+  geom_col(position = position_dodge2(preserve = "single", padding = 0)) +
+  geom_text(
+    position = position_dodge(width = .9),
+    vjust = -0.5, hjust = 0.5,
+    size = 3
+  ) +
+  labs(x = "Terreno", y = "Frequência", fill = "Capturado de Primeira") +
+  theme_estat()
+ggsave("Colunas_Bi01.pdf", width = 158, height = 93, units = "mm")
+
+#Não consegui entender qual o erro com a porcentagem nos gráficos, deixei assim mesmo.
 
 
