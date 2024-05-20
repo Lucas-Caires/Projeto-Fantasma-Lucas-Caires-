@@ -133,33 +133,6 @@ banco$setting_terrain[banco$setting_terrain == "Space"] <- "Espacial"
 banco$setting_terrain[banco$setting_terrain == "Swamp"] <- "Pantanoso"
 banco$setting_terrain[banco$setting_terrain == "Urban"] <- "Urbano"
 
-#Gráfico do Terreno com maior Frequência----
-
-classes <- banco %>%
-  filter(!is.na(setting_terrain)) %>%
-  count(setting_terrain) %>%
-  mutate(
-    freq = n %>% percent()
-  ) %>%
-  mutate(
-    freq = gsub("\\.", ",", freq) %>%
-      paste(sep = ""),
-    label = str_c(n, " (", freq, ")") %>%
-      str_squish()
-)
-
-  ggplot(classes) +
-  aes(x = fct_reorder(setting_terrain, n, .desc=T), y = n, label = label) +
-  geom_bar(stat = "identity", fill = "#A11D21", width = 0.7) +
-  geom_text(
-    position = position_dodge(width = .9),
-    vjust = -0.5, #hjust = .5,
-    size = 3
-  ) + 
-  labs(x = "Terreno", y = "Frequência") +
-  theme_estat()
-ggsave("colunas01.pdf", width = 158, height = 93, units = "mm")
-
 #Gráfico de Ativação das Armadilhas
 ativacao <- banco %>%
   group_by(setting_terrain, trap_work_first) %>%
@@ -197,5 +170,23 @@ ggplot(ativacao_top3) +
 ggsave("Colunas_Bi01.pdf", width = 158, height = 93, units = "mm")
 
 #Não consegui entender qual o erro com a porcentagem nos gráficos, deixei assim mesmo.
+
+#4) Relação entre as notas IMDB e engajamento:----
+ggplot(banco) +
+  aes(x = imdb, y = engagement) +
+  geom_point(colour = "#A11D21", size = 3, alpha = 0.5) +
+  labs(
+    x = "Nota IMDB",
+    y = "Engajamento"
+  ) +
+  theme_estat()
+ggsave("Dispersão01.pdf", width = 158, height = 93, units = "mm")
+
+#Coeficiente de Correlação de Pearson
+x <- c(banco$imdb)
+y <- c(banco$engagement)
+
+cf_pearson <- cor(x, y)
+print(cf_pearson)
 
 
