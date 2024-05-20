@@ -189,4 +189,4 @@ y <- c(banco$engagement)
 cf_pearson <- cor(x, y)
 print(cf_pearson)
 
-
+#Não tinha padronização em relação ao "nível de transparência do alpha, tem um valor ideal?
